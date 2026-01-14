@@ -1,5 +1,6 @@
 import streamlit as st
 import openai
+import os
 
 def main():
     st.set_page_config(page_title="Nexa - AI Legal Assistant", layout="wide")
@@ -33,7 +34,9 @@ def main():
     """, unsafe_allow_html=True)
 
     st.sidebar.title("Configuration")
-    api_key = st.sidebar.text_input("Enter your OpenAI API key:", type="password")
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        api_key = st.sidebar.text_input("Enter your OpenAI API key:", type="password")
 
     st.title("Nexa - Your AI Legal Assistant")
 
