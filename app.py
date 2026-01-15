@@ -48,6 +48,10 @@ def main():
         "All information you share is confidential."
     )
 
+    if not api_key:
+        st.info("Please enter your OpenAI API key in the sidebar to begin.")
+        st.stop()
+
     if api_key:
         client = openai.OpenAI(api_key=api_key)
 
