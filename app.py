@@ -113,22 +113,23 @@ def main():
         else:
             st.markdown(f'<div class="assistant-bubble">{message["content"]}</div>', unsafe_allow_html=True)
 
-    # Get user input
-    user_input = st.text_input("Your answer:", key="user_input")
+    # Only show the input box if there are more questions
+    if st.session_state.question_index < len(questions):
+        user_input = st.text_input("Your answer:", key="user_input")
 
-    if user_input:
-        # Store user's answer
-        st.session_state.messages.append({"role": "user", "content": user_input})
-        st.session_state.answers[questions[st.session_state.question_index]] = user_input
-        st.session_state.question_index += 1
+        if user_input:
+            # Store user's answer
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            st.session_state.answers[questions[st.session_state.question_index]] = user_input
+            st.session_state.question_index += 1
 
-        # Ask the next question or end the conversation
-        if st.session_state.question_index < len(questions):
-            st.session_state.messages.append({"role": "assistant", "content": questions[st.session_state.question_index]})
-        else:
-            st.session_state.messages.append({"role": "assistant", "content": "Thank you for sharing this information. An attorney will review your details and contact you soon."})
+            # Ask the next question or end the conversation
+            if st.session_state.question_index < len(questions):
+                st.session_state.messages.append({"role": "assistant", "content": questions[st.session_state.question_index]})
+            else:
+                st.session_state.messages.append({"role": "assistant", "content": "Thank you for sharing this information. An attorney will review your details and contact you soon."})
 
-        st.rerun()
+            st.rerun()
 
 if __name__ == "__main__":
     main()
