@@ -136,37 +136,40 @@ def main():
             if st.session_state.question_index < len(questions):
                 st.session_state.messages.append({"role": "assistant", "content": questions[st.session_state.question_index]})
             else:
-                # Format the answers for the email
-                email_body = "A new client has completed the intake form.\n\n"
-                for question, answer in st.session_state.answers.items():
-                    email_body += f"**{question}**\n{answer}\n\n"
-
-                # Send the email
-                try:
-                    msg = EmailMessage()
-                    msg.set_content(email_body)
-                    msg['Subject'] = f"New Client Intake: {st.session_state.answers.get('What is your full legal name (as shown on your passport)?', 'N/A')}"
-                    msg['From'] = smtp_user
-                    msg['To'] = recipient_email
-
-                    server = smtplib.SMTP(smtp_host, smtp_port)
-                    server.starttls()
-                    server.login(smtp_user, smtp_pass)
-                    server.send_message(msg)
-                    server.quit()
-
-                    st.session_state.messages.append({"role": "assistant", "content": "Thank you. Your information has been securely submitted to the law firm."})
-                    st.success("Your intake form has been submitted. The law firm has been notified.")
-                except Exception as e:
-                    st.session_state.messages.append({"role": "assistant", "content": "There was an issue submitting your form. Please contact the law firm directly."})
-                    st.error(f"An error occurred while sending the email: {e}")
+                st.session_state.messages.append({"role": "assistant", "content": "Thank you for providing your information. Please review and click the button below to send your details to the firm."})
 
             # Clear the input box value in the state
             st.session_state.input_box = ""
 
-    # Only show the input box if there are more questions
+    # Show the input box while there are questions, otherwise show the send button
     if st.session_state.question_index < len(questions):
         st.text_input("Your answer:", key="input_box", on_change=handle_submit)
+    else:
+        if st.button("Send My Information to the Firm"):
+            # Format the answers for the email
+            email_body = "A new client has completed the intake form.\n\n"
+            for question, answer in st.session_state.answers.items():
+                email_body += f"**{question}**\n{answer}\n\n"
+
+            # Send the email
+            try:
+                msg = EmailMessage()
+                msg.set_content(email_body)
+                msg['Subject'] = f"New Client Intake: {st.session_state.answers.get('What is your full legal name (as shown on your passport)?', 'N/A')}"
+                msg['From'] = smtp_user
+                msg['To'] = recipient_email
+
+                server = smtplib.SMTP(smtp_host, int(smtp_port))
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+                server.quit()
+
+                st.success("Your intake form has been submitted. The law firm has been notified.")
+                st.session_state.messages.append({"role": "assistant", "content": "Your information has been securely submitted. Thank you."})
+                st.rerun() # Rerun to update the message display
+            except Exception as e:
+                st.error(f"An error occurred while sending the email: {e}")
 
 if __name__ == "__main__":
     main()
