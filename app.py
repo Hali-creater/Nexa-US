@@ -1,4 +1,7 @@
 import streamlit as st
+import os
+import smtplib
+from email.message import EmailMessage
 
 def main():
     st.set_page_config(page_title="Nexa - AI Legal Assistant", layout="wide")
@@ -30,6 +33,13 @@ def main():
             }
         </style>
     """, unsafe_allow_html=True)
+
+    st.sidebar.title("Notification Settings")
+    recipient_email = os.getenv("RECIPIENT_EMAIL") or st.sidebar.text_input("Recipient Email")
+    smtp_host = os.getenv("SMTP_HOST") or st.sidebar.text_input("SMTP Host")
+    smtp_port = os.getenv("SMTP_PORT") or st.sidebar.number_input("SMTP Port", min_value=1, max_value=65535, value=587)
+    smtp_user = os.getenv("SMTP_USER") or st.sidebar.text_input("SMTP Username")
+    smtp_pass = os.getenv("SMTP_PASS") or st.sidebar.text_input("SMTP Password", type="password")
 
     st.title("Nexa - Your AI Legal Assistant")
 
@@ -126,7 +136,30 @@ def main():
             if st.session_state.question_index < len(questions):
                 st.session_state.messages.append({"role": "assistant", "content": questions[st.session_state.question_index]})
             else:
-                st.session_state.messages.append({"role": "assistant", "content": "Thank you for sharing this information. An attorney will review your details and contact you soon."})
+                # Format the answers for the email
+                email_body = "A new client has completed the intake form.\n\n"
+                for question, answer in st.session_state.answers.items():
+                    email_body += f"**{question}**\n{answer}\n\n"
+
+                # Send the email
+                try:
+                    msg = EmailMessage()
+                    msg.set_content(email_body)
+                    msg['Subject'] = f"New Client Intake: {st.session_state.answers.get('What is your full legal name (as shown on your passport)?', 'N/A')}"
+                    msg['From'] = smtp_user
+                    msg['To'] = recipient_email
+
+                    server = smtplib.SMTP(smtp_host, smtp_port)
+                    server.starttls()
+                    server.login(smtp_user, smtp_pass)
+                    server.send_message(msg)
+                    server.quit()
+
+                    st.session_state.messages.append({"role": "assistant", "content": "Thank you. Your information has been securely submitted to the law firm."})
+                    st.success("Your intake form has been submitted. The law firm has been notified.")
+                except Exception as e:
+                    st.session_state.messages.append({"role": "assistant", "content": "There was an issue submitting your form. Please contact the law firm directly."})
+                    st.error(f"An error occurred while sending the email: {e}")
 
             # Clear the input box value in the state
             st.session_state.input_box = ""
