@@ -34,14 +34,22 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    st.sidebar.title("Notification Settings")
-    recipient_email = os.getenv("RECIPIENT_EMAIL") or st.sidebar.text_input("Recipient Email")
-    smtp_host = os.getenv("SMTP_HOST") or st.sidebar.text_input("SMTP Host")
-    smtp_port = os.getenv("SMTP_PORT") or st.sidebar.number_input("SMTP Port", min_value=1, max_value=65535, value=587)
-    smtp_user = os.getenv("SMTP_USER") or st.sidebar.text_input("SMTP Username")
-    smtp_pass = os.getenv("SMTP_PASS") or st.sidebar.text_input("SMTP Password", type="password")
-
     st.title("Nexa - Your AI Legal Assistant")
+
+    # Load email configuration from environment variables
+    recipient_email = os.getenv("RECIPIENT_EMAIL")
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = os.getenv("SMTP_PORT")
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_pass = os.getenv("SMTP_PASS")
+
+    # Startup check for environment variables
+    required_vars = ["RECIPIENT_EMAIL", "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS"]
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+
+    if missing_vars:
+        st.error(f"Error: The following environment variables are not set: {', '.join(missing_vars)}. This application cannot send email notifications without them. Please contact the administrator.")
+        st.stop()
 
     # Legal Disclaimer
     st.warning(
