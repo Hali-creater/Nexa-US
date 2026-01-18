@@ -113,14 +113,13 @@ def main():
         else:
             st.markdown(f'<div class="assistant-bubble">{message["content"]}</div>', unsafe_allow_html=True)
 
-    # Only show the input box if there are more questions
-    if st.session_state.question_index < len(questions):
-        user_input = st.text_input("Your answer:", key="user_input")
-
-        if user_input:
+    # Define the callback function to process the user's answer
+    def handle_submit():
+        user_answer = st.session_state.input_box
+        if user_answer:
             # Store user's answer
-            st.session_state.messages.append({"role": "user", "content": user_input})
-            st.session_state.answers[questions[st.session_state.question_index]] = user_input
+            st.session_state.messages.append({"role": "user", "content": user_answer})
+            st.session_state.answers[questions[st.session_state.question_index]] = user_answer
             st.session_state.question_index += 1
 
             # Ask the next question or end the conversation
@@ -129,7 +128,12 @@ def main():
             else:
                 st.session_state.messages.append({"role": "assistant", "content": "Thank you for sharing this information. An attorney will review your details and contact you soon."})
 
-            st.rerun()
+            # Clear the input box value in the state
+            st.session_state.input_box = ""
+
+    # Only show the input box if there are more questions
+    if st.session_state.question_index < len(questions):
+        st.text_input("Your answer:", key="input_box", on_change=handle_submit)
 
 if __name__ == "__main__":
     main()
